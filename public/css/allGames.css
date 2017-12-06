@@ -1,0 +1,53 @@
+html, body {
+  height: auto;
+}
+
+.content {
+  height: auto;
+}
+
+.footer {
+  position: relative;
+}
+
+.content-header {
+  padding-left: 42% !important;
+}
+
+.imgDescription {
+  text-align: left;
+  width: 100%;
+}
+
+.content {
+  width: 100% !important;
+  padding-top: 100px;
+  margin: 0;
+}
+
+.nav-wrapper {
+  position:fixed;
+  z-index: 1;
+  width: 100vw;
+}
+
+@media (max-width: 1060px) {
+  .search {
+    position: fixed;
+  }
+}
+
+.search input {
+  margin-right: 40px;
+}
+
+.disable {
+  pointer-events: none;
+  cursor: default;
+  background-color: rgba(255, 71, 0, .74);
+  font-style: normal;
+  color: white;
+  padding-left: 5px;
+  font-size: 19px;
+  font-weight: normal;
+}

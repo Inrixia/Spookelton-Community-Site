@@ -1,0 +1,236 @@
+.imgnorm {
+  max-width: 100%;
+}
+
+
+
+
+
+.imgDescription {
+  position: absolute;
+  visibility: hidden;
+  color: white;
+  opacity: 0;
+  margin: 0;
+  padding: 15px;
+  -webkit-transition: opacity 0.5s;
+}
+
+.imgCont:hover .imgDescription {
+  visibility: visible;
+  opacity: 1;
+  background-color: rgba(0,0,0,0.8);
+  height: 100%;
+}
+
+.imgDescription:hover {
+  color: white;
+}
+
+.imgDesSmall {
+  padding-left: 4px;
+  padding-top: 4px;
+}
+
+.imgDesSmall h4 {
+  padding: 0;
+  margin: 0;
+  width: 190px;
+}
+
+.imgDesSmall p {
+  font-size: 12px;
+}
+
+.imgDesNorm {
+  padding-top: 0px;
+  padding-left: 10px;
+}
+
+.imgDesNorm h3 {
+  padding-top: 10px;;
+  margin-top: 0;
+  width: 250px;
+}
+
+.imgDesNorm p {
+  font-size: 13px;
+}
+
+.topselling {
+  width: 200px;
+  padding-left: 10px;
+  margin: 0px;
+  padding-top: 0px;
+  display: block;
+}
+
+.topselling h5 {
+  width: 400px;
+}
+
+.imgCont {
+  position: relative;
+  margin-top: 5px;
+  width: 300px;
+  overflow: hidden;
+}
+
+li {
+  display: inline-block;
+  vertical-align: top;
+}
+
+.cartR {
+  font-size: 20px;
+  padding: 5px;
+  padding-left: 3px;
+  background-color: rgba(124, 228, 10, 0.67);
+  display: inline-block;
+  text-align: center;
+  height: 31px;
+  float: right;
+}
+
+.cartR:hover {
+  background-color: rgba(0,0,0,0.6);;
+}
+
+.old {
+  opacity: .6;
+  font-size: 12px !important;
+}
+
+a:hover{
+	text-decoration: none;
+  color: rgba(124, 228, 10, 1);
+}
+
+a {
+  color: white;
+}
+
+#box::before,
+#box::after {
+  content: attr(some-attribute-name);
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-color: transparent;
+  border-style: solid;
+}
+
+#box::before {
+  content: '';
+  border-width: 2em;
+  border-right-color: #ff5a00;
+  border-top-color: #ff5a00;
+}
+
+.imgDetail {
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 10px;
+  padding-bottom: 5px;
+  margin:0px;
+  font-size: 15px;
+  float: right;
+}
+
+.imgOver {
+  position:absolute; /* absolute position (so we can position it where we want)*/
+  bottom:0px; /* position will be on bottom */
+  left:0px;
+  width:100%;
+  /* styling bellow */
+  font-family: 'tahoma';
+  font-size:15px;
+  color:white;
+  background-color: rgba(0,0,0,0.6);
+}
+
+.content-header {
+  margin: 0;
+  margin-top: 20px;
+  margin-left: 20px;
+  display: inline-block;
+}
+
+.content-header-container {
+  margin-bottom: 20px;
+}
+
+.footer {
+  padding: 5px;
+  position: absolute;
+  width: 100%;
+  /*background-color: rgba(40, 40, 40, 0.94);*/
+  background-color: rgba(0,0,0, 0.96);
+  bottom: 0px;
+  line-height: 5px;
+  height: 100px;
+  clear:both;
+  text-align: center;
+  overflow: hidden;
+}
+
+.footer h4 {
+  color: white;
+  font-size: 18px;
+  margin-top: 2px;
+}
+
+.column {
+  width:311px;
+  margin:0 10px;
+  height: 80px;
+  display: inline-block;
+}
+
+.meta-links {
+  bottom: 0;
+  right: 0;
+  height:20px;
+  font-size: 10px;
+  text-align:center;
+  clear: both;
+}
+
+.foot {
+  width: 1000px;
+  display: inline-block;
+}
+
+input {
+  width: 100%;
+  padding: 0.5em 0.5em;
+  font-size: 1.2em;
+  border-radius: 3px;
+  border: 1px solid #D9D9D9;
+}
+
+button {
+  display: inline-block;
+  border-radius: 3px;
+  border: none;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.8em;
+  background: #69c773;
+  border-bottom: 1px solid #498b50;
+  color: white;
+  -webkit-font-smoothing: antialiased;
+  font-weight: bold;
+  margin: 0;
+  width: 100%;
+  text-align: center;
+}
+
+button:hover, button:focus {
+  opacity: 0.75;
+  cursor: pointer;
+}
+
+button:active {
+  opacity: 1;
+  box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.1) inset;
+}

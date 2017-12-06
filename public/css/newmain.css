@@ -1,0 +1,20 @@
+.search {
+    float: right;
+    display: inline-block;
+    margin-top: 20px;
+    margin-right: 25px;
+    color: black;
+    text-align: right;
+    width: 390px;
+}
+.search input {
+    width: 170px;
+}
+.results {
+    position: absolute;
+    text-align: left;
+    background: #27292d;
+    color: white;
+    width: 390px;
+    z-index: 1;
+}
