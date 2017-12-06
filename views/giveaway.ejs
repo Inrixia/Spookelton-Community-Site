@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Giveaway</title>
+    <link href="stylesheets/giveaway.css" rel="stylesheet">
+  </head>
+  <body>
+    <div>
+      <h1>Welcome to the Spookelton Giveaway!</h1>
+      <h2>Please select your entries below</h2>
+    </div>
+    <div class="content">
+      <ul>
+        <% data.forEach(function(game) { %>
+          <a href="/I?id=<%- game._id %>">
+            <li class="imgCont">
+              <div class="imgDescription imgDesNorm">
+                <h3><%- game.name %></h3>
+                <% if (game.data.short_description != '') { %>
+                  <p><%- game.data.short_description %></p>
+                <% } else if (game.data.about_the_game.length < 2000) { %>
+                  <p><%- game.data.about_the_game %></p>
+                <% } else { %>
+                  <p>Game description unavailable... Have a cookie <3</p>
+                <% } %>
+              </div>
+              <img class="imgnorm" src='<%- game.data.header_image%>'></img>
+              <div class="imgOver">
+                <% if (typeof(user) !== 'undefined') { %>
+                  <a href='javascript:;' onclick='javascript:updateCart(<%- '{"name":"' + game.name + '","id":"' + user.id + '","gameid":"' + game._id + '","ammount":"1","price":"' + 111 + '","img":"' + game.data.header_image + '"}' %>)'> <i class='<%- game._id %> cartR fa fa-shopping-cart' aria-hidden="true"></i></a>
+                  <script>
+                  var array = JSON.parse('<%- JSON.stringify(cart) %>');
+                  for (var i = 0; i < array.length; i++) {
+                    if (array[i].gameid === '<%- game._id %>') {
+                      $('.' + array[i].gameid).text('In Cart');
+                      $('.' + array[i].gameid).addClass('disable');
+                      $('.' + array[i].gameid).removeClass('fa fa-shopping-cart');
+                    }
+                  };
+                  </script>
+                <% } %>
+                <% if (!game.data.price_overview) { %>
+                  <h1 class="imgDetail">FREE</h1>
+                <% } else { %>
+                  <h1 class="imgDetail"><del class="old">9999c</del>   <%- game.data.price_overview.final %>c  </h1>
+                <% } %>
+
+              </div>
+          </li>
+        </a>
+        <% }); %>
+      </ul>
+    </div>
+    <div class='footer'>
+      <div class='column'>
+        <h4>The InsaneBros</h4>
+        <p>About Us</p>
+        <p>ROW Games</p>
+        <p>Terms and Conditions</p>
+      </div>
+      <div class='column'>
+        <h4>Skins for credits</h4>
+        <p>FAQ</p>
+        <p>Value calculator</p>
+        <p>Refund Policy</p>
+      </div>
+      <div class='column'>
+        <h4>Feedback & Support</h4>
+        <p>Feedback/Testimonials</p>
+        <p>Donations</p>
+        <p>Help & Support</p>
+      </div>
+      <div class='meta-links'>
+        <p>@2016 InsaneBros. All Rights Reserved.<p>
+      </div>
+    </div>
+  </body>
+</html>
