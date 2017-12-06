@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://code.jquery.com/jquery-3.2.1.js"></script>
+  <script src="http://underscorejs.org/underscore-min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+  <link href="../css/giveaway_admin.css" rel="stylesheet">
+  <link href="../css/giveaway.css" rel="stylesheet">
+  <script>
+  var socket = io();
+  $(document).ready(function() {
+    $('#search').on('keyup', _.debounce(doMe, 512));
+    function doMe() {
+      socket.emit('game_search', $(this).val());
+      socket.on('return_game_search', function (data) {
+        output = ''
+        data.info.forEach(function(game) {
+          console.log(game.in_giveaway)
+          if (game.in_giveaway === true) {
+            output += ('<a style="pointer-events: none;" class="'+game.appid+'" href="javascript:addGame('+game.appid+')"><li class="imgCont"><div class="imgDescription imgDesNorm"><h3>'+game.name+'%></h3></div><img style="opacity: 0.2;" class="imgnorm" onerror="remove404('+game.appid+')" src="http://cdn.edgecast.steamstatic.com/steam/apps/'+game.appid+'/header.jpg"></img></li><div class="imgOver"></div></a>');
+          } else {
+            output += ('<a class="'+game.appid+'" href="javascript:addGame('+game.appid+')"><li class="imgCont"><div class="imgDescription imgDesNorm"><h3>'+game.name+'%></h3></div><img class="imgnorm" onerror="remove404('+game.appid+')" src="http://cdn.edgecast.steamstatic.com/steam/apps/'+game.appid+'/header.jpg"></img></li><div class="imgOver"></div></a>');
+          }
+        })
+        $('#results').html(output);
+      });
+    };
+  });
+  function addGame(appid){
+    socket.emit('game_add', appid)
+    socket.on('return_game_add', function(data){
+      $('.'+appid).css('pointer-events', 'none').children().eq(0).children().eq(1).css('opacity','0.2')
+    })
+  }
+  function remove404(appid){
+    $('.'+appid).remove()
+  }
+  </script>
+  <style>
+
+  </style>
+</head>
+<body>
+<div class="content">
+  <h2>Type in the name of a game to search for it.</h2>
+  <p>Use "" for a specific game & click to add</p>
+  <input type="search" id="search"></input>
+  <ul id="results"></ul>
+</div>
+
+</body>
+</html>

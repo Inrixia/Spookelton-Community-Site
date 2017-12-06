@@ -4,17 +4,18 @@
     <meta charset="utf-8">
     <title>Spookelton Giveaway</title>
 
-    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
     <script src="http://underscorejs.org/underscore-min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.js"></script>
+
     <script>
     function updateEntries(game) {
       console.log(game)
       var socket = io();
-      socket.emit('test', game);
+      socket.emit('add_game', game);
       socket.on('cart-updated', function (cart_status) {
         if (cart_status.err) {
           alert(err);
@@ -29,7 +30,13 @@
   </head>
 
   <body>
+    <img src='../images/GiveawayBanner.png' style='max-width: 100vw;'>
     <div class="content">
+      <div class='header'>
+        <p>Welcome to the spookelton giveaway! There are a few important things you should know:<br>
+        You can only win one game per giveaway, You rank the games your intrested in from 1 to 10<br>
+        Some games are patron only, these will  be greyed out for you if your not a donator. If you want to become a patron click <a href='https://www.patreon.com/VonSpookelton' style='color: #337ab7'>Here</a></p>
+      </div>
       <div class='content-header-container'>
         <% if (typeof(user) == 'undefined') { %>
           <a href='/login'><button class="btn login-button"><img class="login-image" src='https://cdn.worldvectorlogo.com/logos/discord.svg'>Login With Discord</button></a>
@@ -39,24 +46,24 @@
       </div>
       <ul>
         <% games.forEach(function(game) { %>
-          <a href="/I?id=<%- game._id %>">
+          <a href="http://store.steampowered.com/app/<%- game._id %>">
             <li class="imgCont">
               <div class="imgDescription imgDesNorm">
                 <h3><%- game.name %></h3>
-                <% if (game.short_description != '') { %>
-                  <p><%- game.short_description %></p>
+                <% if (game.data.about_the_game) { %>
+                  <p><%- game.data.about_the_game %></p>
                 <% } else { %>
                   <p>Game description unavailable... Have a cookie <3</p>
                 <% } %>
               </div>
-              <img class="imgnorm" src='<%- game.image%>'></img>
+              <img class="imgnorm" src='<%- game.data.header_image %>'></img>
               <div class="imgOver">
                 <% if (typeof(user) !== 'undefined') { %>
                   <a href='javascript:;' onclick='javascript:updateEntries(<%- '{"name":"' + game.name + '","id":"' + user.id + '","gameid":"' + game._id + '","img":"' + game.image + '"}' %>)'><i class='<%- game._id %> add fa fa-plus' aria-hidden="true"></i></a>
                 <% } %>
               </div>
-          </li>
-        </a>
+            </li>
+          </a>
         <% }); %>
       </ul>
     </div>

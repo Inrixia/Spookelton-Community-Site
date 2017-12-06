@@ -5,6 +5,7 @@ passport = require('passport'),
 DiscordStrategy = require('passport-discord').Strategy,
 MongoStore = require('connect-mongo')(session);
 app = express(),
+http = require('http'),
 where = require('node-where'),
 db = require('./db'),
 scopes = ['identify'];
@@ -43,6 +44,15 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+function checkAuth(req, res, next) {
+    if (req.isAuthenticated()) return next();
+    res.redirect('/login');
+}
+
+app.get('/admin/giveaway', function(req, res) {
+  res.render('admin/giveaway')
+})
+
 app.get('/', function(req, res){
   res.render('index')
 })
@@ -50,7 +60,16 @@ app.get('/login', passport.authenticate('discord', { scope: scopes }), function(
 app.get('/callback',
     passport.authenticate('discord', { failureRedirect: '/login' }), function(req, res) {
        res.redirect('/giveaway')
-       console.log(res)
+       where.is(req.ip, function(err, result){
+         data = {
+           discord: req.user,
+           ip: req.ip,
+           location: result.attributes
+         }
+         db.get().collection('users').update({ _id: req.user.id }, { $set: data }, { upsert: true }, function (err) { // Insert the data as a new document into the games collection
+           if(err){console.log(err);}
+         });
+       })
     } // auth success
 );
 app.get('/logout', function(req, res) {
@@ -77,13 +96,8 @@ app.get('/real', checkAuth, function(req, res) {
 })
 app.get('/giveaway', function(req, res) {
   db.get().collection('giveaway_games').find({}).toArray(function(err, data){
-    console.log(data)
     res.render('giveaway', { games: data, user: req.user });
   })
 })
-function checkAuth(req, res, next) {
-    if (req.isAuthenticated()) return next();
-    res.redirect('/login');
-}
 
 module.exports = app;

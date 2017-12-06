@@ -5,10 +5,54 @@ db = require('./db');
 var uid = [];
 
 io.on('connection', function (socket) {
-  socket.on('addGame', function (data) {
+  socket.on('add_game', function (data) {
     console.log(data);
   });
 
+  socket.on('game_search', function (search) {
+    db.get().collection('games_pure').find( { $text: { $search: search } }, { appid: 1, name: 1, in_giveaway: 1 } ).toArray(function(err, info) { // Find from GameCollection where game name matches textbox search
+      socket.emit('return_game_search', { info });
+    })
+  });
+
+  socket.on('game_add', function(appid){
+    getData(appid, function(data) {
+      db.get().collection('giveaway_games').insert([data], function (err, result) { // Insert the data as a new document into the games collection
+        db.get().collection('games_pure').update({ appid: appid }, {$set: {"in_giveaway":true}}, function (err) { // Insert the data as a new document into the games collection
+          if(err){console.log(err);}
+        });
+        socket.emit('return_game_add', err)
+      })
+    })
+  })
+});
+
+function getData (id, done) {
+  var url = 'http://store.steampowered.com/api/appdetails/?appids=' + id; // Generate ID for retriving game info
+  http.get(url, function(res){ // Preform http request
+    var body = '';
+    res.on('data', function(chunk){
+        body += chunk;
+    });
+
+    res.on('end', function(){
+      try {
+        var steamRes = JSON.parse(body); // Prase returned game info into json object
+        steamRes[id].name = steamRes[id].data.name; // Create a new name value at the root of the document
+        delete steamRes[id].data.name; // Delete the old name value in the subdocument data
+        steamRes[id]._id = id; // Set the id of the document to the game id
+        steamRes = steamRes[id]; // Set steamres to equal the updated version and return it
+        done(steamRes);
+      } catch (e) {
+        console.log(id, ": is not JSON");
+      }
+    });
+  }).on('error', function(e){
+    console.log("http error: ", e);
+  });
+}
+
+  /*
   socket.on('DepositReturn', function (data) {
     console.log(data);
     //console.log(uid[data.sid]);
@@ -98,8 +142,6 @@ io.on('connection', function (socket) {
     })
   });
 
-});
-
 function SendRequest(userID, Token, Items, uuid, sid, Inv) {
   request.post(
     'http://localhost:3001/st',
@@ -124,5 +166,6 @@ function SendGift(id, email, name, message, signature, bot, back) {
     }
   );
 };
+*/
 
 module.exports = io;
