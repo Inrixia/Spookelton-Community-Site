@@ -46,32 +46,54 @@ module.exports.getFTBUtilsData = function getFTBUtilsData(serverDir, version){
   return new Promise(function(resolve, reject){
     if (version == '1.7.10') {
       fs.readFile(serverDir+'/Cookies/LatMod/LMPlayers.dat', (err, data) => {
-        if (err) reject(Error(err));
-        resolve(nbt.read(data).payload[''])
+        if (err) resolve({players: err});
+        try {
+          data = (nbt.read(data).payload[''])
+          var players = []
+          for(var i=1; i<data.LastID; i++){
+            players.push(data.Players[i])
+          }
+          resolve({players: players})
+        } catch(err) {
+          console.log(err);
+          resolve({players:err})
+        }
       });
     } else {
       var playersPromise = new Promise(function(resolve, reject){
-        players = []
+        var players = []
         glob(serverDir+'/Cookies/data/ftb_lib/players/*', function(err, files){
-          if (err) reject(Error(err));
-          async.each(files, function(file, done){
-            players.push(nbt.read(fs.readFileSync(file)).payload[''])
-            done()
-          }, function() {
-            resolve(players)
-          })
+          if (err) resolve(err);
+          try {
+            async.each(files, function(file, done){
+              //players.push(nbt.read(fs.readFileSync(file)).payload[''])
+              done()
+            }, function() {
+              resolve(players)
+            })
+          } catch(err) {
+            console.log(err);
+            resolve(err)
+          }
         })
       })
       var teamsPromise = new Promise(function(resolve, reject){
-        teams = []
+        var teams = []
         glob(serverDir+'/Cookies/data/ftb_lib/teams/*', function(err, files){
-          if (err) reject(Error(err));
-          async.each(files, function(file, done){
-            teams.push(nbt.read(fs.readFileSync(file)).payload[''])
-            done()
-          }, function() {
-            resolve(teams)
-          })
+          if (err) resolve(err);
+          try {
+            async.each(files, function(file, done){
+              team = nbt.read(fs.readFileSync(file)).payload['']
+              team.TeamID = file.slice((serverDir+'/Cookies/data/ftb_lib/teams/').length - 1,-4)
+              teams.push(team)
+              done()
+            }, function() {
+              resolve(teams)
+            })
+          } catch(err) {
+            console.log(err);
+            resolve(err)
+          }
         })
       })
       Promise.all([playersPromise, teamsPromise]).then(data => {
@@ -95,6 +117,7 @@ module.exports.upAllServData = function upAllServData(cb){
         serverObj.version = data[2]
         module.exports.getFTBUtilsData(serverObj.dir, serverObj.version).then(ftbData => {
           serverObj.ftbData = ftbData
+          module.exports.escapeKeys(ftbData)
           done()
         })
       })
@@ -102,4 +125,29 @@ module.exports.upAllServData = function upAllServData(cb){
       cb(serverArray)
     })
   })
+}
+
+module.exports.escapeKeys = function escapeKeys(obj) {
+    if (!(Boolean(obj) && typeof obj == 'object'
+      && Object.keys(obj).length > 0)) {
+        return false;
+    }
+    Object.keys(obj).forEach(function(key) {
+        if (typeof(obj[key]) == 'object') {
+            escapeKeys(obj[key]);
+        } else {
+            if (key.indexOf('.') !== -1) {
+                var newkey = key.replace(/\./g, '_dot_');
+                obj[newkey] = obj[key];
+                delete obj[key];
+            }
+            if (key.indexOf('$') !== -1) {
+                var newkey = key.replace(/\$/g, '_amp_');
+                obj[newkey] = obj[key];
+                delete obj[key];
+            }
+
+        }
+    });
+    return true;
 }

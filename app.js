@@ -71,11 +71,67 @@ app.get('/admin/data/update', function(req, res) {
   })
 })
 
-app.get('/admin/data/dump', checkAuth, function(req, res) {
+app.get('/admin/api/dump', checkAuth, function(req, res) {
   db.get().collection('servers').find({}).toArray(function(err, data){
     res.json(data);
   })
 });
+
+app.get('/admin/api/player', checkAuth, function(req, res) {
+  var promises = [
+    new Promise(function(resolve, reject){
+      db.get().collection('servers').aggregate(
+      {'$unwind': "$ftbData.players"},
+      {'$match': {'ftbData.players.Name': req.query.name}},
+      {'$group': {
+          '_id': '$ftbData.players.Name',
+          'UUID': {'$last': '$ftbData.players.UUID'},
+          'servers': {
+              '$push': {
+                  'serverName': '$name',
+                  'version': '$version',
+                  'dir': '$dir',
+                  'properties': '$properties',
+                  'lastSeen': '$ftbData.players.LastTimeSeen',
+                  'lastDeath': '$ftbData.players.Data.ftbu:data.LastDeath',
+                  'homes_1_7': '$ftbData.players.Homes',
+                  'homes': '$ftbData.players.Data.ftbu:data.Homes',
+                  'teamID': '$ftbData.players.TeamID',
+                  'lastPos': '$ftbData.players.LastPos',
+                  'lastItems': '$ftbData.players.LastItems',
+                  'stats': '$ftbData.players.Stats',
+                  }
+              }
+          }
+      }, function(err, data) {
+        resolve(data)
+      })
+    }),
+    new Promise(function(resolve, reject){
+      db.get().collection('servers').aggregate(
+      {'$unwind': "$ftbData.teams"},
+      {'$match': {'ftbData.teams.TeamID': 'rosareven'}},
+      {'$group': {
+          '_id': '$ftbData.teams.TeamID',
+          'servers': {
+              '$push': {
+                  'serverName': '$name',
+                  'team': '$ftbData.teams'
+                  }
+              }
+          }
+      }, function(err, data) {
+        resolve(data)
+      })
+    })
+  ]
+  Promise.all(promises).then(data => {
+    for(var i=0; i<data[0][0].servers.length; i++){
+      data[0][0].servers[i].team = data[1][0].servers[i]
+    }
+    res.json(data[0][0]);
+  })
+})
 
 app.get('/', function(req, res){
   res.render('index')
