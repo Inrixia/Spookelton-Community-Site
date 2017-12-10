@@ -46,37 +46,23 @@
       </div>
       <ul>
         <% games.forEach(function(game) { %>
-
+          <a href="http://store.steampowered.com/app/<%- game._id %>">
             <li class="imgCont">
               <div class="imgDescription imgDesNorm">
-                <h3 align="center" padding-top: 300px ><%- game.name %></h3>
-               
-              </div>
-              <img class="imgnorm" src='<%- game.data.header_image %>'></img>
-            <div class="imgOver">
-                     <a data-toggle="collapse" href="#<%- game._id %>"><span class="  glyphicon glyphicon-question-sign"></span></a>
-               <!--  <% if (typeof(user) !== 'undefined') { %>
-                  <a href='javascript:;' onclick='javascript:updateEntries(<%- '{"name":"' + game.name + '","id":"' + user.id + '","gameid":"' + game._id + '","img":"' + game.image + '"}' %>)'><i class='<%- game._id %> add fa fa-plus' aria-hidden="true"></i></a>-->
-                <% } %> 
-              </div>
-             
-            </li>
-             <div class="panel-collapse collapse" id="<%- game._id %>" >
-              <div class="panel-body" id="info-panel">
-                <div class="row">
-                  <div class="col-sm-7">
-                  </div>
-                  <div class="col-sm-5">
-                  <% if (game.data.detailed_description) { %>
-                  <p><%- game.data.detailed_description %></p>
+                <h3><%- game.name %></h3>
+                <% if (game.data.about_the_game) { %>
+                  <p><%- game.data.about_the_game %></p>
                 <% } else { %>
                   <p>Game description unavailable... Have a cookie <3</p>
                 <% } %>
-                  </div>
-                </div>
-
               </div>
+              <img class="imgnorm" src='<%- game.data.header_image %>'></img>
+              <div class="imgOver">
+                <% if (typeof(user) !== 'undefined') { %>
+                  <a href='javascript:;' onclick='javascript:updateEntries(<%- '{"name":"' + game.name + '","id":"' + user.id + '","gameid":"' + game._id + '","img":"' + game.image + '"}' %>)'><i class='<%- game._id %> add fa fa-plus' aria-hidden="true"></i></a>
+                <% } %>
               </div>
+            </li>
           </a>
         <% }); %>
       </ul>

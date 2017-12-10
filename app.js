@@ -8,6 +8,11 @@ app = express(),
 http = require('http'),
 where = require('node-where'),
 db = require('./db'),
+serv = require('./serverAPI')
+nbt = require('nbt'),
+nbtjs = require('nbt-js');
+fs = require('fs'),
+async = require('async'),
 scopes = ['identify'];
 
 app.set('view engine', 'ejs');
@@ -53,6 +58,25 @@ app.get('/admin/giveaway', function(req, res) {
   res.render('admin/giveaway')
 })
 
+app.get('/admin/data/update', function(req, res) {
+  serv.upAllServData(function(serverArray){
+    async.each(serverArray, function(server, done){
+      db.get().collection('servers').update({ name: server.name },{ $set: server }, { upsert: true }, function (err) { // Insert the data as a new document into the games collection
+        if(err){console.log(err);}
+        done();
+      });
+    }, function(){
+      res.send('Done!<a href="/admin/data/dump">View Data Dimp</a>')
+    })
+  })
+})
+
+app.get('/admin/data/dump', checkAuth, function(req, res) {
+  db.get().collection('servers').find({}).toArray(function(err, data){
+    res.json(data);
+  })
+});
+
 app.get('/', function(req, res){
   res.render('index')
 })
@@ -66,9 +90,9 @@ app.get('/callback',
            ip: req.ip,
            location: result.attributes
          }
-         db.get().collection('users').update({ _id: req.user.id }, { $set: data }, { upsert: true }, function (err) { // Insert the data as a new document into the games collection
-           if(err){console.log(err);}
-         });
+         db.get().collection('giveaway_games').find({}).toArray(function(err, data){
+           res.render('real', { user: data });
+         })
        })
     } // auth success
 );
@@ -89,11 +113,6 @@ app.get('/info', checkAuth, function(req, res) {
       res.json(data);
     })
 });
-app.get('/real', checkAuth, function(req, res) {
-  db.get().collection('giveaway_games').find({}).toArray(function(err, data){
-    res.render('real', { user: data });
-  })
-})
 app.get('/giveaway', function(req, res) {
   db.get().collection('giveaway_games').find({}).toArray(function(err, data){
     res.render('giveaway', { games: data, user: req.user });

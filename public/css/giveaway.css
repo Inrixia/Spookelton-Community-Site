@@ -1,6 +1,6 @@
 html, body {
   height: 100%;
-  background-color: rgb(25, 25, 25);
+  background-color: #444343;
 }
 
 body {
@@ -219,4 +219,14 @@ ul {
   padding-left: 5px;
   font-size: 19px;
   font-weight: normal;
+}
+
+.panel-body {
+  width: 100vw;
+}
+#info-panel {
+  width: 100vw;
+  height: 25vw;
+  overflow: scroll;
+  background-color: #3c3c3c;
 }
