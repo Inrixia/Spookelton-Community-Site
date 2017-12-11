@@ -3,19 +3,166 @@ var async = require("async")
 var fs = require('fs')
 var nbt   = require('nbt-js')
 var nbtn = require('nbt')
+var db = require('./db')
+var me = require('mongo-escape').escape
+var request = require('request')
 var properties = require('properties')
 
-module.exports.getServerDirs = function getServerDirs(finish) {
-  var fileArray = []
-  var serverArray = []
+module.exports.cleanUUID = function cleanUUID(playerUUID){
+  if (playerUUID) {
+      return playerUUID = [playerUUID.slice(0, 8), '-', playerUUID.slice(8, 12), '-', playerUUID.slice(12, 16), '-', playerUUID.slice(16, 20), '-', playerUUID.slice(20)].join('')
+  }
+  return false
+}
 
-  fileArray = glob.sync("Z/*/server.properties", {ignore:'Z/System Volume Information/**'})
-  fileArray = fileArray.concat(glob.sync("X/*/server.properties", {ignore:'Z/System Volume Information/**'}))
-  async.each(fileArray, function (server, done) {
-    serverArray.push({dir:server.slice(0, -17)})
-    done()
-  }, function() {
-    finish(serverArray)
+module.exports.checkOptions = function checkOptions(options){
+  return new Promise(function(resolve, reject){
+    if (!options.name && options.uuid){
+      serv.getUUID(options.name, true).then(player => {
+        options.name = player.name
+        resolve({options: options})
+      })
+    } else if (options.name && !options.uuid) {
+      serv.getUUID(options.name, false).then(player => {
+        options.uuid = module.exports.cleanUUID(player.id)
+        resolve({options: options})
+      })
+    } else {
+      resolve({error: 'Missing Username or Player UUID', options: options})
+    }
+  })
+}
+
+module.exports.getPlayerData = function getPlayerData(options, serverDir){
+  return new Promise(function(resolve, reject){
+    console.log(options);
+    var promises = []
+    if (options.playerdata) {
+      promises.push(new Promise(function(resolve, reject){resolve(module.exports.getNbt(serverDir+'/Cookies/playerdata/'+options.uuid+'.dat'))}))
+    }
+    if (options.baubles) {
+      promises.push(new Promise(function(resolve, reject){resolve(module.exports.getNbt(serverDir+'/Cookies/playerdata/'+options.name+'.baub'))}))
+    }
+    if (options.thaumcraft) {
+      promises.push(new Promise(function(resolve, reject){resolve(module.exports.getNbt(serverDir+'/Cookies/playerdata/'+options.name+'.thaum'))}))
+    }
+    Promise.all(promises).then(data => {
+      resolve(data)
+    })
+  })
+}
+
+module.exports.getNbt = function getNbt(fileDir){
+  return new Promise(function(resolve, reject){
+    console.log(fileDir);
+    fs.exists(fileDir,function(exists){
+      console.log(exists);
+      if (exists){
+        fs.readFile(fileDir, function(error, file){
+          if(error) reject(error)
+          nbtn.parse(file, function(error, nbtData){
+            if(error) reject(error)
+            resolve(module.exports.cleanNbt(nbtData))
+          })
+        })
+      } else {
+        resolve({error: 'No Data'})
+      }
+    })
+  })
+}
+
+module.exports.cleanNbt = function cleanNbt(obj){
+  if (obj.hasOwnProperty('value')) {
+    obj = cleanNbt(obj.value);
+  }
+  var k;
+  if (obj instanceof Object) {
+    for (k in obj){
+      if (obj[k].hasOwnProperty('value')) {
+        obj[k] = cleanNbt(obj[k].value);
+      }
+      cleanNbt(obj[k]);
+    }
+  }
+  return obj
+}
+
+module.exports.getFTBPlayerData = function getFTBPlayerData(options){
+  var promises = []
+  if (options.player) {
+    promises.push(
+      new Promise(function(resolve, reject){
+        db.get().collection('servers').aggregate(
+        {'$unwind': "$ftbData.players"},
+        {'$match': {'ftbData.players.Name': req.query.name}},
+        {'$group': {
+            '_id': '$ftbData.players.Name',
+            'UUID': {'$last': '$ftbData.players.UUID'},
+            'servers': {
+                '$push': {
+                    'serverName': '$name',
+                    'version': '$version',
+                    'dir': '$dir',
+                    'properties': '$properties',
+                    'lastSeen': '$ftbData.players.LastTimeSeen',
+                    'lastDeath': '$ftbData.players.Data.ftbu:data.LastDeath',
+                    'homes_1_7': '$ftbData.players.Homes',
+                    'homes': '$ftbData.players.Data.ftbu:data.Homes',
+                    'teamID': '$ftbData.players.TeamID',
+                    'lastPos': '$ftbData.players.LastPos',
+                    'lastItems': '$ftbData.players.LastItems',
+                    'stats': '$ftbData.players.Stats',
+                    }
+                }
+            }
+        }, function(err, data) {
+          resolve(data)
+        })
+      })
+    )
+  } if (options.team) {
+    promises.push(
+      new Promise(function(resolve, reject){
+        db.get().collection('servers').aggregate(
+        {'$unwind': "$ftbData.teams"},
+        {'$match': {'ftbData.teams.TeamID': 'rosareven'}},
+        {'$group': {
+            '_id': '$ftbData.teams.TeamID',
+            'servers': {
+                '$push': {
+                    'serverName': '$name',
+                    'team': '$ftbData.teams'
+                    }
+                }
+            }
+        }, function(err, data) {
+          resolve(data)
+        })
+      })
+    )
+  }
+  Promise.all(promises).then(data => {
+    for(var i=0; i<data[0][0].servers.length; i++){
+      data[0][0].servers[i].team = data[1][0].servers[i]
+    }
+    resolve(data[0][0])
+  })
+}
+
+module.exports.getServerDirs = function getServerDirs() {
+  return new Promise(function(resolve, reject){
+    var fileArray = []
+    var serverArray = []
+
+    fileArray = glob.sync("Z/*/server.properties", {ignore:'Z/System Volume Information/**'})
+    fileArray = fileArray.concat(glob.sync("X/*/server.properties", {ignore:'Z/System Volume Information/**'}))
+    async.each(fileArray, function (server, done) {
+      serverArray.push({dir:server.slice(0, -17)})
+      done()
+    }, function() {
+      resolve(serverArray)
+    })
   })
 }
 
@@ -28,7 +175,7 @@ module.exports.getServerVersion = function getServerVersion(serverDir) {
 module.exports.getServerProperties = function getServerProperties(serverDir) {
   return new Promise(function(resolve, reject){
     properties.parse(serverDir+'server.properties', {path: true}, function(err, properties){
-      if (err) reject(Error(err));
+      if (err) reject(err);
       resolve(properties);
     });
   })
@@ -37,13 +184,13 @@ module.exports.getServerProperties = function getServerProperties(serverDir) {
 module.exports.getServerName = function getServerName(serverDir){
   return new Promise(function(resolve, reject){
     fs.readFile(serverDir+'start.bat', "utf8", (err, data) => {
-      if (err) reject(Error(err));
+      if (err) reject(err);
       resolve(/RawUI.WindowTitle = .*/.exec(data)[0].slice(21, -2));
     });
   })
 }
 
-module.exports.getFTBUtilsData = function getFTBUtilsData(serverDir, version){
+module.exports.getFTBServerData = function getFTBServerData(serverDir, version){
   return new Promise(function(resolve, reject){
     if (version == '1.7.10') {
       fs.readFile(serverDir+'/Cookies/LatMod/LMPlayers.dat', (err, data) => {
@@ -57,7 +204,7 @@ module.exports.getFTBUtilsData = function getFTBUtilsData(serverDir, version){
           resolve({players: players})
         } catch(err) {
           console.log(err);
-          resolve({players:err})
+          resolve({players: err})
         }
       });
     } else {
@@ -67,7 +214,7 @@ module.exports.getFTBUtilsData = function getFTBUtilsData(serverDir, version){
           if (err) resolve(err);
           try {
             async.each(files, function(file, done){
-              //players.push(nbt.read(fs.readFileSync(file)).payload[''])
+              players.push(nbt.read(fs.readFileSync(file)).payload[''])
               done()
             }, function() {
               resolve(players)
@@ -104,100 +251,53 @@ module.exports.getFTBUtilsData = function getFTBUtilsData(serverDir, version){
   })
 }
 
-
-module.exports.getPlayerData = function getPlayerData(serverDir, playerUUID, playerName){
+module.exports.getUUID = function getUUID(user, isUUID){
   return new Promise(function(resolve, reject){
-    playerUUID = [playerUUID.slice(0, 8), '-', playerUUID.slice(8, 12), '-', playerUUID.slice(12, 16), '-', playerUUID.slice(16, 20), '-', playerUUID.slice(20)].join('');
-    console.log(nbt.read(fs.readFileSync(serverDir+'/Cookies/playerdata/'+playerUUID+'.dat')))
-    //playerdata.baubles = nbt.read(fs.readFileSync(serverDir+'/Cookies/playerdata/'+playerName+'.baub')).payload['']
-    resolve('nothing')
-  })
-}
-
-module.exports.breaking = function breaking(done) {
-playerUUID = '02f8abf58d2f4a68962e0741ba1af5aa'
-playerUUID = [playerUUID.slice(0, 8), '-', playerUUID.slice(8, 12), '-', playerUUID.slice(12, 16), '-', playerUUID.slice(16, 20), '-', playerUUID.slice(20)].join('');
-//console.log(nbt.read(fs.readFileSync('Z/pickle pack 3/'+'/Cookies/playerdata/'+playerUUID+'.dat')))
-//console.log(nbt.read(fs.readFileSync('Z/pickle pack 3/'+'/Cookies/playerdata/test.dat')))
-fs.readFile('Z/pickle pack 3/'+'/Cookies/playerdata/test.dat', function(error, file) {
-  if (error) throw error;
-  nbtn.parse(file, function(error, data){
-    if (error) throw error;
-    //console.log(data);
-    done(cleanNbt(data), file)
-  });
-})
-}
-
-module.exports.breaking(function(data, file){
-  console.log(cleanNbt(obj).Attributes);
-})
-
-function cleanNbt(obj){
-  if (obj.hasOwnProperty('value')) {
-    obj = cleanNbt(obj.value);
-  }
-  var k;
-  if (obj instanceof Object) {
-    for (k in obj){
-      if (obj[k].hasOwnProperty('value')) {
-        obj[k] = cleanNbt(obj[k].value);
-      }
-      cleanNbt(obj[k]);
+    if (!isUUID) {
+      url = 'https://api.mojang.com/users/profiles/minecraft/'+user
+    } else {
+      url = 'https://api.mojang.com/user/profiles/'+user+'/names'
     }
-  }
-  return obj
-}
-
-//module.exports.getPlayerData('Z/pickle pack 3/', '02f8abf58d2f4a68962e0741ba1af5aa', 'Electrofried').then(playerdata => {
-//console.log(playerdata);
-//})
-
-module.exports.upAllServData = function upAllServData(cb){
-  module.exports.getServerDirs(function(serverArray){
-    async.map(serverArray, function(serverObj, done){
-      var promises = [
-        module.exports.getServerName(serverObj.dir),
-        module.exports.getServerProperties(serverObj.dir),
-        module.exports.getServerVersion(serverObj.dir)
-      ]
-      Promise.all(promises).then(data => {
-        serverObj.name = data[0]
-        serverObj.properties = data[1]
-        serverObj.version = data[2]
-        module.exports.getFTBUtilsData(serverObj.dir, serverObj.version).then(ftbData => {
-          serverObj.ftbData = ftbData
-          module.exports.escapeKeys(ftbData)
-          done()
-        })
-      })
-    }, function(){
-      cb(serverArray)
+    request.get({
+      url: url,
+      json: true,
+    }, (err, res, data) => {
+      if (!isUUID) resolve(data)
+      resolve(data)
     })
   })
 }
 
-module.exports.escapeKeys = function escapeKeys(obj) {
-    if (!(Boolean(obj) && typeof obj == 'object'
-      && Object.keys(obj).length > 0)) {
-        return false;
-    }
-    Object.keys(obj).forEach(function(key) {
-        if (typeof(obj[key]) == 'object') {
-            escapeKeys(obj[key]);
-        } else {
-            if (key.indexOf('.') !== -1) {
-                var newkey = key.replace(/\./g, '_dot_');
-                obj[newkey] = obj[key];
-                delete obj[key];
-            }
-            if (key.indexOf('$') !== -1) {
-                var newkey = key.replace(/\$/g, '_amp_');
-                obj[newkey] = obj[key];
-                delete obj[key];
-            }
+module.exports.upAllServData = function upAllServData(){
+  return new Promise(function(resolve, reject){
+    var promises = []
+    module.exports.getServerDirs().then(serverArray => {
+      async.map(serverArray, function(serverObj, done){
+        promises.push(module.exports.upServData(serverObj))
+      })
+      Promise.all(promises).then(result => {resolve(result)})
+    })
+  })
+}
 
-        }
-    });
-    return true;
+module.exports.upServData = function upServData(serverObj){
+  return new Promise(function(resolve, reject){
+    var promises = [
+      module.exports.getServerName(serverObj.dir),
+      module.exports.getServerProperties(serverObj.dir),
+      module.exports.getServerVersion(serverObj.dir),
+    ]
+    Promise.all(promises).then(data => {
+      serverObj.name = data[0]
+      serverObj.properties = data[1]
+      serverObj.version = data[2]
+      module.exports.getFTBServerData(serverObj.dir, serverObj.version).then(ftbData => {
+        serverObj.ftbData = me(ftbData)
+        db.get().collection('servers').update({ name: serverObj.name },{ $set: serverObj }, { upsert: true }, function (err) { // Insert the data as a new document into the games collection
+          if(err){resolve({'server': serverObj.dir, 'status': err}), console.log(err);}
+          resolve({'server': serverObj.dir, 'status': 'Completed!'})
+        });
+      })
+    })
+  })
 }

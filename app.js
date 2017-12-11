@@ -58,16 +58,9 @@ app.get('/admin/giveaway', function(req, res) {
   res.render('admin/giveaway')
 })
 
-app.get('/admin/data/update', function(req, res) {
-  serv.upAllServData(function(serverArray){
-    async.each(serverArray, function(server, done){
-      db.get().collection('servers').update({ name: server.name },{ $set: server }, { upsert: true }, function (err) { // Insert the data as a new document into the games collection
-        if(err){console.log(err);}
-        done();
-      });
-    }, function(){
-      res.send('Done!<a href="/admin/data/dump">View Data Dimp</a>')
-    })
+app.get('/admin/api/update', function(req, res) {
+  serv.upAllServData().then(result =>{
+    res.json(result)
   })
 })
 
@@ -78,66 +71,28 @@ app.get('/admin/api/dump', checkAuth, function(req, res) {
 });
 
 app.get('/admin/api/playerdata', checkAuth, function(req, res) {
-  serv.breaking(function(data){
-      res.json(data);
+  var options = {
+    name: req.query.name,
+    uuid: serv.cleanUUID(req.query.uuid),
+    playerdata: req.query.playerdata,
+    baubles: req.query.baubles,
+    thaumcraft: req.query.thaumcraft,
+    ftb: req.query.ftb
+  }
+  serv.checkOptions(options).then(opt => {
+    if (opt.error) res.send(opt.error)
+    options = opt.options
+    if (!req.query.server){
+      db.get().collection('servers').find({}, {dir: 1, name: 1, _id: 0}).toArray(function(err, serverArray){
+        res.json({error: 'Missing Server', servers: serverArray})
+      })
+    } else {
+      serv.getPlayerData(options, req.query.server).then(data => {
+        res.json(data);
+      })
+    }
   })
 });
-
-app.get('/admin/api/player', checkAuth, function(req, res) {
-  var promises = [
-    new Promise(function(resolve, reject){
-      db.get().collection('servers').aggregate(
-      {'$unwind': "$ftbData.players"},
-      {'$match': {'ftbData.players.Name': req.query.name}},
-      {'$group': {
-          '_id': '$ftbData.players.Name',
-          'UUID': {'$last': '$ftbData.players.UUID'},
-          'servers': {
-              '$push': {
-                  'serverName': '$name',
-                  'version': '$version',
-                  'dir': '$dir',
-                  'properties': '$properties',
-                  'lastSeen': '$ftbData.players.LastTimeSeen',
-                  'lastDeath': '$ftbData.players.Data.ftbu:data.LastDeath',
-                  'homes_1_7': '$ftbData.players.Homes',
-                  'homes': '$ftbData.players.Data.ftbu:data.Homes',
-                  'teamID': '$ftbData.players.TeamID',
-                  'lastPos': '$ftbData.players.LastPos',
-                  'lastItems': '$ftbData.players.LastItems',
-                  'stats': '$ftbData.players.Stats',
-                  }
-              }
-          }
-      }, function(err, data) {
-        resolve(data)
-      })
-    }),
-    new Promise(function(resolve, reject){
-      db.get().collection('servers').aggregate(
-      {'$unwind': "$ftbData.teams"},
-      {'$match': {'ftbData.teams.TeamID': 'rosareven'}},
-      {'$group': {
-          '_id': '$ftbData.teams.TeamID',
-          'servers': {
-              '$push': {
-                  'serverName': '$name',
-                  'team': '$ftbData.teams'
-                  }
-              }
-          }
-      }, function(err, data) {
-        resolve(data)
-      })
-    })
-  ]
-  Promise.all(promises).then(data => {
-    for(var i=0; i<data[0][0].servers.length; i++){
-      data[0][0].servers[i].team = data[1][0].servers[i]
-    }
-    res.json(data[0][0]);
-  })
-})
 
 app.get('/', function(req, res){
   res.render('index')
