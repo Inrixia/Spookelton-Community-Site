@@ -77,6 +77,12 @@ app.get('/admin/api/dump', checkAuth, function(req, res) {
   })
 });
 
+app.get('/admin/api/playerdata', checkAuth, function(req, res) {
+  serv.breaking(function(data){
+      res.json(data);
+  })
+});
+
 app.get('/admin/api/player', checkAuth, function(req, res) {
   var promises = [
     new Promise(function(resolve, reject){

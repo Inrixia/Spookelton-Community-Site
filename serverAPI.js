@@ -2,6 +2,7 @@ var glob = require("glob")
 var async = require("async")
 var fs = require('fs')
 var nbt   = require('nbt-js')
+var nbtn = require('nbt')
 var properties = require('properties')
 
 module.exports.getServerDirs = function getServerDirs(finish) {
@@ -102,6 +103,55 @@ module.exports.getFTBUtilsData = function getFTBUtilsData(serverDir, version){
     }
   })
 }
+
+
+module.exports.getPlayerData = function getPlayerData(serverDir, playerUUID, playerName){
+  return new Promise(function(resolve, reject){
+    playerUUID = [playerUUID.slice(0, 8), '-', playerUUID.slice(8, 12), '-', playerUUID.slice(12, 16), '-', playerUUID.slice(16, 20), '-', playerUUID.slice(20)].join('');
+    console.log(nbt.read(fs.readFileSync(serverDir+'/Cookies/playerdata/'+playerUUID+'.dat')))
+    //playerdata.baubles = nbt.read(fs.readFileSync(serverDir+'/Cookies/playerdata/'+playerName+'.baub')).payload['']
+    resolve('nothing')
+  })
+}
+
+module.exports.breaking = function breaking(done) {
+playerUUID = '02f8abf58d2f4a68962e0741ba1af5aa'
+playerUUID = [playerUUID.slice(0, 8), '-', playerUUID.slice(8, 12), '-', playerUUID.slice(12, 16), '-', playerUUID.slice(16, 20), '-', playerUUID.slice(20)].join('');
+//console.log(nbt.read(fs.readFileSync('Z/pickle pack 3/'+'/Cookies/playerdata/'+playerUUID+'.dat')))
+//console.log(nbt.read(fs.readFileSync('Z/pickle pack 3/'+'/Cookies/playerdata/test.dat')))
+fs.readFile('Z/pickle pack 3/'+'/Cookies/playerdata/test.dat', function(error, file) {
+  if (error) throw error;
+  nbtn.parse(file, function(error, data){
+    if (error) throw error;
+    //console.log(data);
+    done(cleanNbt(data), file)
+  });
+})
+}
+
+module.exports.breaking(function(data, file){
+  console.log(cleanNbt(obj).Attributes);
+})
+
+function cleanNbt(obj){
+  if (obj.hasOwnProperty('value')) {
+    obj = cleanNbt(obj.value);
+  }
+  var k;
+  if (obj instanceof Object) {
+    for (k in obj){
+      if (obj[k].hasOwnProperty('value')) {
+        obj[k] = cleanNbt(obj[k].value);
+      }
+      cleanNbt(obj[k]);
+    }
+  }
+  return obj
+}
+
+//module.exports.getPlayerData('Z/pickle pack 3/', '02f8abf58d2f4a68962e0741ba1af5aa', 'Electrofried').then(playerdata => {
+//console.log(playerdata);
+//})
 
 module.exports.upAllServData = function upAllServData(cb){
   module.exports.getServerDirs(function(serverArray){
