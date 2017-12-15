@@ -1,0 +1,81 @@
+{
+    "_id" : "262146238852497411",
+    "discord" : {
+        "username" : "Rosareven",
+        "discriminator" : "7602",
+        "mfa_enabled" : false,
+        "id" : "262146238852497411",
+        "avatar" : "3b15b0198d65a57e9b3594fd221be151",
+        "provider" : "discord",
+        "accessToken" : "ZKHwHuUXXgwOAvCYqGT0PWCaOpp8ZN",
+        "fetchedAt" : "2017-12-06T06:55:10.087Z"
+    },
+    "giveaway" :
+        [
+            {
+                "date": "15.12.2017",
+                "applied": [
+                    {
+                        "name": "Borderlands 2",
+                        "id": "23424",
+                        "priority": 1
+                    },
+                    {
+                        "name": "Borderlands TPS",
+                        "id": "268724",
+                        "priority": 0
+                    }
+                ],
+                "won": [
+                    {
+                        "name": "Borderlands 2",
+                        "id": "23424",
+                        "reteemed": false
+                    }
+                ]
+            },
+            {
+                "date": "10.11.2017",
+                "applied": [
+                    {
+                        "name": "Portal 2",
+                        "id": "546786",
+                        "priority": 0
+                    },
+                    {
+                        "name": "GTA V",
+                        "id": "435456",
+                        "priority": 1
+                    },
+                    {
+                        "name": "Portal",
+                        "id": "345676",
+                        "priority": 2
+                    },
+                    {
+                        "name": "GTA IV",
+                        "id": "57656758",
+                        "priority": 3
+                    }
+                ],
+                "won": [
+                    {
+                        "name": "Borderlands 2",
+                        "id": "23424",
+                        "redeemed": true
+                    }
+                ]
+            }
+        ],
+    "ip" : "::ffff:119.81.10.164",
+    "location" : {
+        "countryCode" : "SG",
+        "country" : "Singapore",
+        "regionCode" : "01",
+        "region" : "Central Singapore Community Development Council",
+        "city" : "Singapore",
+        "postalCode" : "",
+        "lat" : 1.2855,
+        "lng" : 103.8565
+    }
+}

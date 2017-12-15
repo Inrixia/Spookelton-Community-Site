@@ -30,7 +30,7 @@
   </head>
 
   <body>
-    <img src='../images/GiveawayBanner.png' style='max-width: 100vw;'>
+    <img src='../images/GiveawayBanner.png' style='width: 98.8vw;'>
     <div class="content">
       <div class='header'>
         <p>Welcome to the spookelton giveaway! There are a few important things you should know:<br>
@@ -44,7 +44,8 @@
           <button class="btn login-button"><img class="login-image" src='https://cdn.discordapp.com/avatars/<%- user.id %>/<%- user.avatar %>.png?size=128'><%- user.username %></button>
         <% } %>
       </div>
-      <ul>
+
+      <ul style="width: 98vw">
         <% games.forEach(function(game) { %>
 
             <li class="imgCont">
@@ -61,21 +62,21 @@
               </div>
              
             </li>
-             <div class="panel-collapse collapse" id="<%- game._id %>" >
+
+             <div class="panel-collapse collapse" id="<%- game._id %>" style=" padding-right: 50px" >
               <div class="panel-body" id="info-panel">
-                <div class="row">
+                <div class="row" style="  overflow-y: hidden;">
                   <div class="col-sm-7">
                   </div>
-                  <div class="col-sm-5">
+                  <div class="col-sm-5" >
                   <% if (game.data.detailed_description) { %>
-                  <p><%- game.data.detailed_description %></p>
+                  <p ><%- game.data.detailed_description %></p>
                 <% } else { %>
                   <p>Game description unavailable... Have a cookie <3</p>
                 <% } %>
                   </div>
                 </div>
-
-              </div>
+                </div>
               </div>
           </a>
         <% }); %>

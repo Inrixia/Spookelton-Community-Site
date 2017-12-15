@@ -58,6 +58,11 @@ app.get('/admin/giveaway', function(req, res) {
   res.render('admin/giveaway')
 })
 
+//app.get('/bulk', function(req, res) {
+//  serv.bulk()
+//  res.send('Working')
+//})
+
 app.get('/admin/api/update', function(req, res) {
   serv.upAllServData().then(result =>{
     res.json(result)

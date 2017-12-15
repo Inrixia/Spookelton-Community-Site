@@ -7,6 +7,10 @@ var db = require('./db')
 var me = require('mongo-escape').escape
 var request = require('request')
 var properties = require('properties')
+var StreamArray = require('./node_modules/stream-json/utils/StreamObject');
+var stream = StreamArray.make();
+
+var fs = require("fs");
 
 module.exports.cleanUUID = function cleanUUID(playerUUID){
   if (playerUUID) {
@@ -50,6 +54,20 @@ module.exports.getPlayerData = function getPlayerData(options, serverDir){
       resolve(data)
     })
   })
+}
+
+module.exports.bulk = function bulk(){
+  var objectCount = 0;
+  stream.output.on("data", function(object){
+    db.get().collection('fim').insert(object.value)
+    objectCount ++;
+    console.log(objectCount);
+  });
+  stream.output.on("end", function(){
+    console.log("done");
+  });
+
+  fs.createReadStream("index.json").pipe(stream.input);
 }
 
 module.exports.getNbt = function getNbt(fileDir){
